@@ -1,0 +1,1 @@
+TOKEN = '<discord app token>'
