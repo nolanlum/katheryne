@@ -5,6 +5,7 @@
 # python runtime
 venv/
 python3.9/
+__pycache__/
 
 # config
 config.py
