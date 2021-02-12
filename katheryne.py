@@ -58,7 +58,7 @@ async def hornyjail(ctx):
 class GenshinAccountability(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.next_run = datetime.now()
+        self.next_run = self.get_next_run()
         self.banned_user_override = None
 
     def cog_unload(self):
@@ -84,13 +84,13 @@ class GenshinAccountability(commands.Cog):
             return
 
         banned_users = tuple()
-        if genzai.hour == 22:
+        if self.banned_user_override:
+            banned_users = (self.banned_user_override, )
+            self.banned_user_override = None
+        elif genzai.hour == 22:
             banned_users = (148954595350151168, 325944609463205888)
         elif genzai.hour == 1:
             banned_users = (417473397769895951, )
-        elif self.banned_user_override:
-            banned_users = (self.banned_user_override, )
-            self.banned_user_override = None
 
         banned_channels = {780579621040422932, 698338845502078987}
         for user_id in banned_users:
