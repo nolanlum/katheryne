@@ -24,6 +24,7 @@ async def show_commands(ctx):
 **!pekothink** - Big brain peko
 **!dispose** - A sexist picture targeting the fragile male ego
 **!hornyjail** - Go to jail
+**!hornyflag** - Flag on the play
 **!maaya** - Best girl
 """.strip()
     )
@@ -54,6 +55,10 @@ async def himbo(ctx):
 @bot.command(name='hornyjail')
 async def hornyjail(ctx):
     await ctx.send(file=discord.File('img/hornyjail.jpg'))
+
+@bot.command(name='hornyflag')
+async def hornyflag(ctx):
+    await ctx.send(file=discord.File('img/hornyflag.jpg'))
 
 class GenshinAccountability(commands.Cog):
     def __init__(self, bot):
@@ -97,14 +102,15 @@ class GenshinAccountability(commands.Cog):
             member = await guild.fetch_member(user_id)
             if member and member.voice and member.voice.channel:
                 if member.voice.channel.id in banned_channels:
-                    await self.bot.get_channel(802399940109664296).send(random.choice([
+                    reminder = random.choice([
                         f"<@!{user_id}> daily reminder to stop playing Genshin!!",
                         f"<@!{user_id}> didn't you say you were going to stop playing games?",
                         f"I sure hope you've logged off of Genshin <@!{user_id}>",
                         f"<@!{user_id}> it's time to remove yourself from Genshin",
                         f"<@!{user_id}> have you forgotten about your accountability goals?",
                         f"<@!{user_id}> bruh.",
-                    ]))
+                    ])
+                    await self.bot.get_channel(802399940109664296).send(reminder)
 
     @commands.command(name='shame')
     async def test_shame_bot(self, ctx):
