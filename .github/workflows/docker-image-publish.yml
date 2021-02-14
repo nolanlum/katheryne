@@ -15,4 +15,4 @@ jobs:
       - name: Tag image as latest
         run: docker tag ghcr.io/nolanlum/katheryne:$GITHUB_SHA ghcr.io/nolanlum/katheryne:latest
       - name: Push the Docker image
-        run: docker push ghcr.io/nolanlum/katheryne:$GITHUB_SHA
+        run: docker push --all-tags ghcr.io/nolanlum/katheryne
