@@ -5,7 +5,7 @@ import discord
 from dateutil.rrule import rrule, HOURLY
 from discord.ext import commands, tasks
 
-from config import TOKEN
+from .config import TOKEN
 
 bot = commands.Bot(command_prefix='!')
 bot.remove_command('help')
