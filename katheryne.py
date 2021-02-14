@@ -25,6 +25,7 @@ async def show_commands(ctx):
 **!dispose** - A sexist picture targeting the fragile male ego
 **!hornyjail** - Go to jail
 **!hornyflag** - Flag on the play
+**!bonksho** - Experience the wrath of the rock
 **!maaya** - Best girl
 """.strip()
     )
@@ -59,6 +60,10 @@ async def hornyjail(ctx):
 @bot.command(name='hornyflag')
 async def hornyflag(ctx):
     await ctx.send(file=discord.File('img/hornyflag.jpg'))
+
+@bot.command(name='bonksho')
+async def bonksho(ctx):
+    await ctx.send(file=discord.File('img/tendo_bonksho.jpg'))
 
 class GenshinAccountability(commands.Cog):
     def __init__(self, bot):
