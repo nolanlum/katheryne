@@ -1,14 +1,18 @@
+import asyncio
+import io
+import os.path
 import random
+import re
 from datetime import datetime
 
 import discord
 from dateutil.rrule import rrule, HOURLY
 from discord.ext import commands, tasks
+from discord.oggparse import OggStream
+from discord.player import AudioSource
 
+from . import bot
 from .config import TOKEN
-
-bot = commands.Bot(command_prefix='!')
-bot.remove_command('help')
 
 @bot.event
 async def on_ready():
@@ -64,6 +68,41 @@ async def hornyflag(ctx):
 @bot.command(name='bonksho')
 async def bonksho(ctx):
     await ctx.send(file=discord.File('img/tendo_bonksho.jpg'))
+
+class OpusAudioSource(AudioSource):
+    def __init__(self, filename):
+        with open(filename, 'rb') as f:
+            self.audio_bytes = f.read()
+        self.packet_iter = OggStream(io.BytesIO(self.audio_bytes)).iter_packets()
+
+    def is_opus(self):
+        return True
+
+    def read(self):
+        return next(self.packet_iter, b'')
+
+PLAY_COMMAND_PATTERN = re.compile('!p(?:lay)? (?P<name>[a-z0-9_-]+)')
+@bot.command(name='p')
+async def play_audio(ctx):
+    match = PLAY_COMMAND_PATTERN.match(ctx.message.content)
+    if not match:
+        return
+
+    audiofile_name = f"wav/{match.group('name')}.opus"
+    if not os.path.exists(audiofile_name):
+        return
+
+    if not ctx.author.voice or not ctx.author.voice.channel:
+        return
+    vc = await ctx.author.voice.channel.connect()
+
+    try:
+        done = asyncio.Event()
+        vc.play(OpusAudioSource(audiofile_name), after=lambda ex: done.set())
+        await done.wait()
+    finally:
+        if vc.is_connected():
+            await vc.disconnect()
 
 class GenshinAccountability(commands.Cog):
     def __init__(self, bot):

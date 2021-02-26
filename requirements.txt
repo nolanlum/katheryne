@@ -10,6 +10,8 @@ async-timeout==3.0.1
     # via aiohttp
 attrs==20.3.0
     # via aiohttp
+cffi==1.14.5
+    # via pynacl
 chardet==3.0.4
     # via aiohttp
 click==7.1.2
@@ -24,10 +26,16 @@ multidict==5.1.0
     #   yarl
 pip-tools==5.5.0
     # via -r requirements.in
+pycparser==2.20
+    # via cffi
+pynacl==1.4.0
+    # via -r requirements.in
 python-dateutil==2.8.1
     # via -r requirements.in
 six==1.15.0
-    # via python-dateutil
+    # via
+    #   pynacl
+    #   python-dateutil
 typing-extensions==3.7.4.3
     # via aiohttp
 yarl==1.6.3
