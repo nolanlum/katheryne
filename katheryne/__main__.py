@@ -1,5 +1,6 @@
 import asyncio
 import io
+import os
 import os.path
 import random
 import re
@@ -103,6 +104,14 @@ async def play_audio(ctx):
     finally:
         if vc.is_connected():
             await vc.disconnect()
+
+@bot.command(name='p?')
+async def list_audio_files(ctx):
+    embed = discord.Embed(
+        title="Available (meme) audio clips",
+        description=", ".join(f"`{f[:-5]}`" for f in sorted(os.listdir('wav/')) if f.endswith('.opus'))
+    )
+    await ctx.send(embed=embed)
 
 class GenshinAccountability(commands.Cog):
     def __init__(self, bot):
