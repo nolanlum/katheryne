@@ -223,6 +223,7 @@ class GenshinWebLogin(commands.Cog):
     @commands.command(name='genshinlogin')
     async def test_login_reminder(self, ctx):
         self.test_user = ctx.author.id
+        await self.check_online()
 
 bot.add_cog(GenshinAccountability(bot))
 bot.add_cog(GenshinWebLogin(bot))
