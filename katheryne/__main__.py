@@ -7,13 +7,15 @@ import re
 from datetime import datetime
 
 import discord
-from dateutil.rrule import rrule, HOURLY
+from dateutil.rrule import rrule, HOURLY, DAILY
 from discord.ext import commands, tasks
 from discord.oggparse import OggStream
 from discord.player import AudioSource
 
 from . import bot
 from .config import TOKEN
+
+from .baerritos import Baerritos
 
 @bot.event
 async def on_ready():
@@ -137,7 +139,7 @@ class GenshinAccountability(commands.Cog):
             return
         self.next_run = self.get_next_run()
 
-        guild = self.bot.get_guild(689238357670232083)
+        guild = self.bot.get_guild(Baerritos.BAERRITOS_GUILD_ID)
         if not guild:
             return
 
@@ -146,15 +148,14 @@ class GenshinAccountability(commands.Cog):
             banned_users = (self.banned_user_override, )
             self.banned_user_override = None
         elif genzai.hour == 22:
-            banned_users = (148954595350151168, 325944609463205888)
+            banned_users = Baerritos.BAERRITOS_GENSHIN_ACCOUNTABILITY_22
         elif genzai.hour == 1:
-            banned_users = (417473397769895951, )
+            banned_users = Baerritos.BAERRITOS_GENSHIN_ACCOUNTABILITY_25
 
-        banned_channels = {780579621040422932, 698338845502078987}
         for user_id in banned_users:
             member = await guild.fetch_member(user_id)
             if member and member.voice and member.voice.channel:
-                if member.voice.channel.id in banned_channels:
+                if member.voice.channel.id in Baerritos.BAERRITOS_GENSHIN_CHANNELS:
                     reminder = random.choice([
                         f"<@!{user_id}> daily reminder to stop playing Genshin!!",
                         f"<@!{user_id}> didn't you say you were going to stop playing games?",
@@ -163,13 +164,67 @@ class GenshinAccountability(commands.Cog):
                         f"<@!{user_id}> have you forgotten about your accountability goals?",
                         f"<@!{user_id}> bruh.",
                     ])
-                    await self.bot.get_channel(802399940109664296).send(reminder)
+                    await self.bot.get_channel(Baerritos.BAERRITOS_ACCOUNTABILITY_CHANNEL).send(reminder)
 
     @commands.command(name='shame')
     async def test_shame_bot(self, ctx):
         self.banned_user_override = ctx.author.id
         self.next_run = datetime.now()
 
+class GenshinWebLogin(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.next_run = self.get_next_run()
+        self.test_user = None
+
+    def cog_unload(self):
+        self.check_online.stop()
+
+    def get_next_run(self):
+        return rrule(DAILY, byhour=20, byminute=0, bysecond=0).after(datetime.now())
+
+    def precondition(self):
+        if self.test_user:
+            return True
+
+        genzai = datetime.now()
+        if genzai < self.next_run:
+            return False
+        self.next_run = self.get_next_run()
+
+        guild = self.bot.get_guild(Baerritos.BAERRITOS_GUILD_ID)
+        if not guild:
+            return False
+
+        return True
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if not self.check_online.is_running():
+            self.check_online.start()
+
+    @tasks.loop(seconds=600)
+    async def check_online(self):
+        if not self.precondition():
+            return
+
+        checkin_user_ids = list()
+        if self.test_user:
+            checkin_user_ids = [self.test_user]
+            self.test_user = None
+        else:
+            checkin_user_ids = Baerritos.BAERRITOS_GENSHIN_CHECKIN_USERS
+
+        online_members = ['<@!{0}>'.format(user_id) for user_id in checkin_user_ids]
+        reminder_members = " ".join(online_members)
+        reminder = f"{reminder_members}: 星と深淵を目指せ！ A reminder to check in online at https://webstatic-sea.mihoyo.com/ys/event/signin-sea/index.html?act_id=e202102251931481&lang=en-us"
+        await self.bot.get_channel(Baerritos.BAERRITOS_GAMES_CHANNEL).send(reminder)
+
+    @commands.command(name='genshinlogin')
+    async def test_login_reminder(self, ctx):
+        self.test_user = ctx.author.id
+        await self.check_online()
 
 bot.add_cog(GenshinAccountability(bot))
+bot.add_cog(GenshinWebLogin(bot))
 bot.run(TOKEN)
