@@ -185,7 +185,7 @@ class GenshinWebLogin(commands.Cog):
         self.check_online.stop()
 
     def get_next_run(self):
-        return rrule(DAILY, byhour=2, byminute=20, bysecond=20).after(datetime.now())
+        return rrule(DAILY, byhour=20, byminute=0, bysecond=0).after(datetime.now())
 
     def precondition(self):
         if self.test_user:
