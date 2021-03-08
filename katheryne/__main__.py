@@ -203,7 +203,7 @@ class GenshinWebLogin(commands.Cog):
         if not self.check_online.is_running():
             self.check_online.start()
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=600)
     async def check_online(self):
         if not self.precondition():
             return
