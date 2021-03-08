@@ -15,7 +15,7 @@ from discord.player import AudioSource
 from . import bot
 from .config import TOKEN
 
-from .baerritos import BaerritoConstants
+from .baerritos import Baerritos
 
 @bot.event
 async def on_ready():
@@ -116,8 +116,6 @@ async def list_audio_files(ctx):
     await ctx.send(embed=embed)
 
 class GenshinAccountability(commands.Cog):
-    BC = BaerritoConstants()
-
     def __init__(self, bot):
         self.bot = bot
         self.next_run = self.get_next_run()
@@ -141,7 +139,7 @@ class GenshinAccountability(commands.Cog):
             return
         self.next_run = self.get_next_run()
 
-        guild = self.bot.get_guild(self.BC.BAERRITOS_GUILD_ID)
+        guild = self.bot.get_guild(Baerritos.BAERRITOS_GUILD_ID)
         if not guild:
             return
 
@@ -150,14 +148,14 @@ class GenshinAccountability(commands.Cog):
             banned_users = (self.banned_user_override, )
             self.banned_user_override = None
         elif genzai.hour == 22:
-            banned_users = self.BC.BAERRITOS_GENSHIN_ACCOUNTABILITY_22
+            banned_users = Baerritos.BAERRITOS_GENSHIN_ACCOUNTABILITY_22
         elif genzai.hour == 1:
-            banned_users = self.BC.BAERRITOS_GENSHIN_ACCOUNTABILITY_25
+            banned_users = Baerritos.BAERRITOS_GENSHIN_ACCOUNTABILITY_25
 
         for user_id in banned_users:
             member = await guild.fetch_member(user_id)
             if member and member.voice and member.voice.channel:
-                if member.voice.channel.id in self.BC.BAERRITOS_GENSHIN_CHANNELS:
+                if member.voice.channel.id in Baerritos.BAERRITOS_GENSHIN_CHANNELS:
                     reminder = random.choice([
                         f"<@!{user_id}> daily reminder to stop playing Genshin!!",
                         f"<@!{user_id}> didn't you say you were going to stop playing games?",
@@ -166,7 +164,7 @@ class GenshinAccountability(commands.Cog):
                         f"<@!{user_id}> have you forgotten about your accountability goals?",
                         f"<@!{user_id}> bruh.",
                     ])
-                    await self.bot.get_channel(self.BC.BAERRITOS_ACCOUNTABILITY_CHANNEL).send(reminder)
+                    await self.bot.get_channel(Baerritos.BAERRITOS_ACCOUNTABILITY_CHANNEL).send(reminder)
 
     @commands.command(name='shame')
     async def test_shame_bot(self, ctx):
@@ -174,8 +172,6 @@ class GenshinAccountability(commands.Cog):
         self.next_run = datetime.now()
 
 class GenshinWebLogin(commands.Cog):
-    BC = BaerritoConstants()
-
     def __init__(self, bot):
         self.bot = bot
         self.next_run = self.get_next_run()
@@ -196,7 +192,7 @@ class GenshinWebLogin(commands.Cog):
             return False
         self.next_run = self.get_next_run()
 
-        guild = self.bot.get_guild(self.BC.BAERRITOS_GUILD_ID)
+        guild = self.bot.get_guild(Baerritos.BAERRITOS_GUILD_ID)
         if not guild:
             return False
 
@@ -217,12 +213,12 @@ class GenshinWebLogin(commands.Cog):
             checkin_user_ids = [self.test_user]
             self.test_user = None
         else:
-            checkin_user_ids = self.BC.BAERRITOS_GENSHIN_CHECKIN_USERS
+            checkin_user_ids = Baerritos.BAERRITOS_GENSHIN_CHECKIN_USERS
 
         online_members = ['<@!{0}>'.format(user_id) for user_id in checkin_user_ids]
         reminder_members = " ".join(online_members)
         reminder = f"{reminder_members}: 星と深淵を目指せ！ A reminder to check in online at https://webstatic-sea.mihoyo.com/ys/event/signin-sea/index.html?act_id=e202102251931481&lang=en-us"
-        await self.bot.get_channel(self.BC.BAERRITOS_GAMES_CHANNEL).send(reminder)
+        await self.bot.get_channel(Baerritos.BAERRITOS_GAMES_CHANNEL).send(reminder)
 
     @commands.command(name='genshinlogin')
     async def test_login_reminder(self, ctx):
