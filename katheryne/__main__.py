@@ -179,37 +179,54 @@ class GenshinWebLogin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.next_run = self.get_next_run()
+        self.test_user = None
 
     def cog_unload(self):
         self.check_online.stop()
 
     def get_next_run(self):
-        return rrule(DAILY, byhour=20).after(datetime.now())
+        return rrule(DAILY, byhour=2, byminute=20, bysecond=20).after(datetime.now())
+
+    def precondition(self):
+        if self.test_user:
+            return True
+
+        genzai = datetime.now()
+        if genzai < self.next_run:
+            return False
+        self.next_run = self.get_next_run()
+
+        guild = self.bot.get_guild(self.BC.BAERRITOS_GUILD_ID)
+        if not guild:
+            return False
+
+        return True
 
     @commands.Cog.listener()
     async def on_ready(self):
         if not self.check_online.is_running():
             self.check_online.start()
 
-    @tasks.loop(seconds=1)
+    @tasks.loop(seconds=5)
     async def check_online(self):
-        genzai = datetime.now()
-        if genzai < self.next_run:
-            return
-        self.next_run = self.get_next_run()
-
-        guild = self.bot.get_guild(self.BC.BAERRITOS_GUILD_ID)
-        if not guild:
+        if not self.precondition():
             return
 
-        online_members = ['<@!{0}>'.format(user_id) for user_id in self.BC.BAERRITOS_GENSHIN_CHECKIN_USERS]
+        checkin_user_ids = list()
+        if self.test_user:
+            checkin_user_ids = [self.test_user]
+            self.test_user = None
+        else:
+            checkin_user_ids = self.BC.BAERRITOS_GENSHIN_CHECKIN_USERS
+
+        online_members = ['<@!{0}>'.format(user_id) for user_id in checkin_user_ids]
         reminder_members = " ".join(online_members)
         reminder = f"{reminder_members}: 星と深淵を目指せ！ A reminder to check in online at https://webstatic-sea.mihoyo.com/ys/event/signin-sea/index.html?act_id=e202102251931481&lang=en-us"
         await self.bot.get_channel(self.BC.BAERRITOS_GAMES_CHANNEL).send(reminder)
 
     @commands.command(name='genshinlogin')
     async def test_login_reminder(self, ctx):
-        self.next_run = datetime.now()
+        self.test_user = ctx.author.id
 
 bot.add_cog(GenshinAccountability(bot))
 bot.add_cog(GenshinWebLogin(bot))
