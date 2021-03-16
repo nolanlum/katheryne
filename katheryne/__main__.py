@@ -4,7 +4,7 @@ import os
 import os.path
 import random
 import re
-from datetime import datetime
+from datetime import datetime, date
 
 import discord
 from dateutil.rrule import rrule, HOURLY, DAILY
@@ -13,6 +13,7 @@ from discord.oggparse import OggStream
 from discord.player import AudioSource
 
 from . import baerritos
+from . import genshin
 from . import bot
 from .config import TOKEN
 
@@ -201,8 +202,25 @@ class GenshinWebLogin(commands.Cog):
     async def on_ready(self):
         if not self.check_online.is_running():
             self.check_online.start()
+        if not self.check_maintenance.is_running():
+            self.check_maintenance.start()
 
-    @tasks.loop(seconds=600)
+    @tasks.loop(seconds=60)
+    async def check_maintenance(self):
+        one_hour_before = genshin.NEXT_MAINTENANCE_TIME - (60 * 60)
+        fifteen_minutes_before = genshin.NEXT_MAINTENANCE_TIME - (60 * 15)
+        current_timestamp = datetime.now().timestamp()
+
+        maintenance_time_string = datetime.fromtimestamp(genshin.NEXT_MAINTENANCE_TIME).strftime("%b %d, %I:%M %p")
+        await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"Debug: timestamp is {current_timestamp}. Difference with one hour is {abs(one_hour_before - current_timestamp)}")
+        if abs(one_hour_before - current_timestamp) <= 30:
+            await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"**Notice!** There is less than **an hour** left before the game enters maintenance. Please plan accordingly. Maintenance will start at {maintenance_time_string} Pacific.")
+        elif abs(fifteen_minutes_before - current_timestamp) <= 30:
+            await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"**Notice!** There is less than **15 minutes** left before the game enters maintenance. Please plan accordingly. Maintenance will start at {maintenance_time_string} Pacific.")
+        elif abs(genshin.NEXT_MAINTENANCE_TIME - current_timestamp) <= 30:
+            await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"**Notice!** Maintenance on Teyvat will be starting shortly. Please wait warmly.")
+
+    @tasks.loop(seconds=300)
     async def check_online(self):
         if not self.precondition():
             return
@@ -216,13 +234,21 @@ class GenshinWebLogin(commands.Cog):
 
         online_members = ['<@!{0}>'.format(user_id) for user_id in checkin_user_ids]
         reminder_members = " ".join(online_members)
-        reminder = f"{reminder_members}: 星と深淵を目指せ！ A reminder to check in online at https://webstatic-sea.mihoyo.com/ys/event/signin-sea/index.html?act_id=e202102251931481&lang=en-us"
+        reminder = f"{reminder_members}: 星と深淵を目指せ！ A reminder to check in online at {genshin.HOYOLAB_CHECKIN_URL}."
+        if datetime.fromtimestamp(genshin.WEB_END_TIME) > datetime.now():
+            reminder += f"\n\nThere is currently a web event **\"{genshin.WEB_EVENT_NAME}\"** running! Make sure to complete the tasks at {genshin.WEB_EVENT_URL}."
+
         await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(reminder)
 
     @commands.command(name='genshinlogin')
     async def test_login_reminder(self, ctx):
         self.test_user = ctx.author.id
         await self.check_online()
+
+    @commands.command(name='genshinmaint')
+    async def test_genshin_maintenance(self, ctx):
+        maintenance_time_string = datetime.fromtimestamp(genshin.NEXT_MAINTENANCE_TIME).strftime("%b %d, %I:%M %p")
+        await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"Planned maintenance is occuring at {maintenance_time_string} Pacific.")
 
 bot.add_cog(GenshinAccountability(bot))
 bot.add_cog(GenshinWebLogin(bot))
