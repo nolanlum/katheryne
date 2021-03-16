@@ -212,7 +212,6 @@ class GenshinWebLogin(commands.Cog):
         current_timestamp = datetime.now().timestamp()
 
         maintenance_time_string = datetime.fromtimestamp(genshin.NEXT_MAINTENANCE_TIME).strftime("%b %d, %I:%M %p")
-        await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"Debug: timestamp is {current_timestamp}. Difference with one hour is {abs(one_hour_before - current_timestamp)}")
         if abs(one_hour_before - current_timestamp) <= 30:
             await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"**Notice!** There is less than **an hour** left before the game enters maintenance. Please plan accordingly. Maintenance will start at {maintenance_time_string} Pacific.")
         elif abs(fifteen_minutes_before - current_timestamp) <= 30:
