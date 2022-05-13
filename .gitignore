@@ -4,8 +4,8 @@
 
 # python runtime
 venv/
-python3.9/
 __pycache__/
+pyvenv.cfg
 
 # config
 /config.py
