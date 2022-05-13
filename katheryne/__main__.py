@@ -72,6 +72,11 @@ async def hornyflag(ctx):
 async def bonksho(ctx):
     await ctx.send(file=discord.File('img/tendo_bonksho.jpg'))
 
+@bot.command(name='moshi')
+async def moshi(ctx):
+    response = 'https://twitter.com/Giruyong/status/1442406252567412740'
+    await ctx.send(response)
+
 class OpusAudioSource(AudioSource):
     def __init__(self, filename):
         with open(filename, 'rb') as f:
