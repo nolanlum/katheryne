@@ -254,6 +254,29 @@ class GenshinWebLogin(commands.Cog):
         maintenance_time_string = datetime.fromtimestamp(genshin.NEXT_MAINTENANCE_TIME).strftime("%b %d, %I:%M %p")
         await self.bot.get_channel(baerritos.GAMES_CHANNEL).send(f"Planned maintenance is occuring at {maintenance_time_string} Pacific.")
 
-bot.add_cog(GenshinAccountability(bot))
-bot.add_cog(GenshinWebLogin(bot))
+class TsugaruKaikyou(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if baerritos.BUTTON_ID in [x.id for x in message.stickers]:
+            if not message.author.voice or not message.author.voice.channel:
+                return
+            vc = await message.author.voice.channel.connect()
+
+            try:
+                done = asyncio.Event()
+                vc.play(OpusAudioSource('wav/TsugaruKaikyouFuyugeshiki.opus'), after=lambda ex: done.set())
+                await done.wait()
+            finally:
+                if vc.is_connected():
+                    await vc.disconnect()
+
+async def setup():
+    await bot.add_cog(GenshinAccountability(bot))
+    await bot.add_cog(GenshinWebLogin(bot))
+    await bot.add_cog(TsugaruKaikyou(bot))
+
+bot.setup_hook = setup
 bot.run(TOKEN)
