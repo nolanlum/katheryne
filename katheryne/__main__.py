@@ -3,7 +3,6 @@ import io
 import os
 import os.path
 import re
-from datetime import date
 
 import discord
 from discord.ext import commands

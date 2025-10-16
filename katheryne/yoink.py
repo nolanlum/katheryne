@@ -7,6 +7,7 @@ from discord.ext import commands
 class Yoinker(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.session = aiohttp.ClientSession(raise_for_status=True)
 
     @commands.command(name='yoink')
     async def yoink_emote(self, ctx, emoji_source, name: str):
@@ -31,7 +32,6 @@ class Yoinker(commands.Cog):
 
         # Get image data
         image_data = None
-        image_url = None
 
         # Check if emoji_source is a Discord emoji
         if emoji_source.startswith('<') and emoji_source.endswith('>'):
@@ -44,10 +44,8 @@ class Yoinker(commands.Cog):
                 emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{extension}"
                 
                 try:
-                    async with aiohttp.ClientSession(raise_for_status=True) as session:
-                        async with session.get(emoji_url) as resp:
-                            image_data = await resp.read()
-                            image_url = emoji_url
+                    async with self.session.get(emoji_url) as resp:
+                        image_data = await resp.read()
                 except Exception as e:
                     await ctx.send(f"❌ An error occurred while downloading the emoji: {str(e)}")
                     return
@@ -58,20 +56,18 @@ class Yoinker(commands.Cog):
         # If not a Discord emoji, treat as URL
         elif emoji_source.startswith('http://') or emoji_source.startswith('https://'):
             try:
-                async with aiohttp.ClientSession(raise_for_status=True) as session:
-                    async with session.get(emoji_source) as resp:
-                        content_type = resp.headers.get('content-type', '')
-                        if not content_type.startswith('image/'):
-                            await ctx.send("❌ URL returned a non-image content type.")
-                            return
-                        
-                        content_length = resp.headers.get('content-length')
-                        if content_length and int(content_length) > 8 * 1024 * 1024:
-                            await ctx.send("❌ Image file is too large. Maximum size is 8MB.")
-                            return
-                        
-                        image_data = await resp.read()
-                        image_url = emoji_source
+                async with self.session.get(emoji_source) as resp:
+                    content_type = resp.headers.get('content-type', '')
+                    if not content_type.startswith('image/'):
+                        await ctx.send("❌ URL returned a non-image content type.")
+                        return
+                    
+                    content_length = resp.headers.get('content-length')
+                    if content_length and int(content_length) > 8 * 1024 * 1024:
+                        await ctx.send("❌ Image file is too large. Maximum size is 8MB.")
+                        return
+                    
+                    image_data = await resp.read()
             except Exception as e:
                 await ctx.send(f"❌ An error occurred while downloading the image: {str(e)}")
                 return
